@@ -21,7 +21,7 @@ enforcement is monitor-mode-safe by default, allowlisted, time-limited,
 and requires explicit human approval before anything is applied.
 
 ## Team Information
-- [FULL NAME] — [CTC ID]
+- Biyansa Abdurahman — CTC-3810-26
 
 ## Installation
 
