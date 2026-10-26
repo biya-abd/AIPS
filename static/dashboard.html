@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AIPS — Agentic Intrusion Prevention System</title>
+<link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+<div class="layout">
+
+  <header class="header">
+    <div class="header-left">
+      <div class="brand-icon">🛡️</div>
+      <div>
+        <div class="brand-name">AIPS</div>
+        <div class="brand-sub">Agentic Intrusion Prevention System</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="pill"><span class="dot" id="hdr-status-dot"></span><span id="hdr-status-text">Loading…</span></span>
+      <span class="pill" id="hdr-mode-pill">Mode: —</span>
+      <span class="pill">🧠 AI: <span id="hdr-ai-model">—</span></span>
+      <span class="pill"><span class="dot" id="hdr-ai-dot" style="background:#5b6687"></span><span id="hdr-ai-status">—</span></span>
+      <span class="pill">⏱ Uptime: <span id="hdr-uptime">—</span></span>
+    </div>
+  </header>
+
+  <nav class="sidebar">
+    <div>
+      <div class="nav-item active" data-view="dashboard"><span class="nav-icon">🏠</span>Dashboard</div>
+      <div class="nav-item" data-view="live-events"><span class="nav-icon">📡</span>Live Events</div>
+      <div class="nav-item" data-view="threats"><span class="nav-icon">🛡️</span>Threats</div>
+      <div class="nav-item" data-view="agent-activity"><span class="nav-icon">🤖</span>Agent Activity</div>
+      <div class="nav-item" data-view="response-center"><span class="nav-icon">⚡</span>Response Center</div>
+      <div class="nav-item" data-view="honeypot"><span class="nav-icon">🍯</span>Honeypot</div>
+      <div class="nav-item" data-view="audit-logs"><span class="nav-icon">📜</span>Audit Logs</div>
+      <div class="nav-item" data-view="configuration"><span class="nav-icon">⚙️</span>Configuration</div>
+    </div>
+    <div class="sidebar-footer">AIPS v1.0.0<br>INSA CTC Project</div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ===================== DASHBOARD ===================== -->
+    <section id="view-dashboard" class="view active">
+      <div class="section-title"><span class="dot"></span>System Overview</div>
+      <div class="grid grid-6">
+        <div class="card"><div class="card-title">Sensor Status</div><div class="card-value" id="ov-sensor">—</div><div class="card-sub" id="ov-sensor-sub"></div></div>
+        <div class="card"><div class="card-title">Backend Status</div><div class="card-value green" id="ov-backend">—</div><div class="card-sub">FastAPI</div></div>
+        <div class="card"><div class="card-title">Events / Minute</div><div class="card-value cyan" id="ov-epm">—</div><div class="card-sub">(real, current)</div></div>
+        <div class="card"><div class="card-title">Last Event</div><div class="card-value" id="ov-last-event" style="font-size:14px">—</div><div class="card-sub" id="ov-last-event-sub"></div></div>
+        <div class="card"><div class="card-title">AI Provider</div><div class="card-value" style="font-size:14px">OpenRouter</div><div class="card-sub" id="ov-ai-model-sub"></div></div>
+        <div class="card"><div class="card-title">Uptime</div><div class="card-value" id="ov-uptime" style="font-size:16px">—</div><div class="card-sub">Since start</div></div>
+      </div>
+
+      <div class="grid grid-3 mt">
+        <div class="card">
+          <div class="panel-header"><h3>Event Summary (real)</h3></div>
+          <div class="flex" style="gap:18px;">
+            <canvas id="chart-donut" width="130" height="130" style="width:130px;height:130px;flex-shrink:0;"></canvas>
+            <div style="flex:1" id="donut-legend"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="panel-header"><h3>Threat Level</h3></div>
+          <div class="flex-between">
+            <div>
+              <div class="card-value" id="threat-score" style="font-size:30px;">—</div>
+              <div class="faint">Risk Score (0-100)</div>
+            </div>
+          </div>
+          <div class="faint mt">Risk Trend (last 1h)</div>
+          <canvas id="chart-risk-trend" height="60"></canvas>
+        </div>
+        <div class="card">
+          <div class="panel-header"><h3>Network Activity <span class="link" id="live-dot">● Live</span></h3></div>
+          <div class="faint">Events per Minute</div>
+          <canvas id="chart-events-rate" height="60"></canvas>
+        </div>
+      </div>
+
+      <div class="grid grid-2 mt">
+        <div class="card">
+          <div class="panel-header">
+            <h3>● Live Event Feed</h3>
+            <div class="view-actions">
+              <select id="dash-feed-label"><option value="">All sources</option><option value="REAL">REAL</option><option value="SIMULATED">SIMULATED</option><option value="TEST">TEST</option></select>
+            </div>
+          </div>
+          <div style="max-height:360px; overflow-y:auto;">
+            <table>
+              <thead><tr><th>Time</th><th>Type</th><th>Source</th><th>Rule</th><th>Severity</th><th>Risk</th></tr></thead>
+              <tbody id="dash-feed-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="panel-header"><h3>Agent Activity</h3><span class="link" data-goto="agent-activity">View all</span></div>
+            <div id="dash-agent-activity" style="max-height:170px; overflow-y:auto;"></div>
+          </div>
+          <div class="card mt">
+            <div class="panel-header"><h3>Response Center</h3><span class="link" data-goto="response-center">View all</span></div>
+            <div id="dash-response-summary"></div>
+          </div>
+          <div class="card mt">
+            <div class="panel-header"><h3>Honeypot Monitoring</h3><span class="link" data-goto="honeypot">View all</span></div>
+            <div id="dash-honeypot-summary"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-3 mt">
+        <div class="card">
+          <div class="panel-header"><h3>Quick Controls</h3></div>
+          <div class="flex-between">
+            <div><strong>Event Generator</strong><div class="faint" id="eg-status">stopped</div></div>
+          </div>
+          <div class="flex mt">
+            <button class="btn primary small" id="btn-eg-start">Start</button>
+            <button class="btn danger small" id="btn-eg-stop">Stop</button>
+            <button class="btn small" data-goto="configuration">Settings</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="panel-header"><h3>Recent Detections</h3></div>
+          <div id="dash-recent-detections"></div>
+        </div>
+        <div class="card">
+          <div class="panel-header"><h3>System Info</h3></div>
+          <div class="stat-row"><span class="muted">Total Events (real, 24h)</span><span id="si-total-events">—</span></div>
+          <div class="stat-row"><span class="muted">Storage Used</span><span id="si-storage">—</span></div>
+          <div class="stat-row"><span class="muted">Database</span><span>aips.db</span></div>
+          <div class="stat-row"><span class="muted">AI Provider</span><span>OpenRouter</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== LIVE EVENTS ===================== -->
+    <section id="view-live-events" class="view">
+      <div class="section-title">Live Events<div class="view-actions">
+        <input id="le-search" placeholder="Search path/IP…">
+        <select id="le-label"><option value="">All sources</option><option value="REAL">REAL</option><option value="SIMULATED">SIMULATED</option><option value="TEST">TEST</option></select>
+        <button class="btn small" id="le-refresh">Refresh</button>
+      </div></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Time</th><th>Source IP</th><th>Method</th><th>Path</th><th>Status</th><th>Bytes</th><th>Label</th></tr></thead>
+          <tbody id="le-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== THREATS ===================== -->
+    <section id="view-threats" class="view">
+      <div class="section-title">Threats / Detections<div class="view-actions">
+        <select id="th-severity"><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+        <select id="th-label"><option value="">All sources</option><option value="REAL">REAL</option><option value="SIMULATED">SIMULATED</option><option value="TEST">TEST</option></select>
+        <button class="btn small" id="th-refresh">Refresh</button>
+      </div></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Last Seen</th><th>Rule</th><th>Source IP</th><th>Severity</th><th>Risk</th><th>Count</th><th>Status</th><th>Label</th><th>Actions</th></tr></thead>
+          <tbody id="th-body"></tbody>
+        </table>
+      </div>
+      <div class="card mt" id="th-detail-card" style="display:none;">
+        <div class="panel-header"><h3>Detection Detail</h3><span class="link" id="th-detail-close">Close</span></div>
+        <div id="th-detail-body"></div>
+      </div>
+    </section>
+
+    <!-- ===================== AGENT ACTIVITY ===================== -->
+    <section id="view-agent-activity" class="view">
+      <div class="section-title">Agent Activity<div class="view-actions"><button class="btn small" id="aa-refresh">Refresh</button></div></div>
+      <div class="card"><div id="aa-body"></div></div>
+    </section>
+
+    <!-- ===================== RESPONSE CENTER ===================== -->
+    <section id="view-response-center" class="view">
+      <div class="section-title">Response Center<div class="view-actions"><button class="btn small" id="rc-refresh">Refresh</button></div></div>
+      <div class="grid grid-3">
+        <div class="card"><div class="card-title">Mode</div><div class="card-value" id="rc-mode">—</div><div class="faint">Change in Configuration</div></div>
+        <div class="card"><div class="card-title">Applied Blocks</div><div class="card-value green" id="rc-applied">—</div></div>
+        <div class="card"><div class="card-title">Refused / Failed</div><div class="card-value amber" id="rc-refused">—</div></div>
+      </div>
+      <div class="card mt">
+        <div class="panel-header"><h3>Request a Block (requires approval; monitor mode never changes the system)</h3></div>
+        <div class="flex">
+          <input id="rc-target-ip" placeholder="Target IP e.g. 192.168.1.45">
+          <input id="rc-reason" placeholder="Reason">
+          <input id="rc-duration" type="number" placeholder="Minutes" style="width:90px;" value="30">
+          <label class="flex faint"><input type="checkbox" id="rc-approve"> Approve now</label>
+          <button class="btn primary small" id="rc-submit">Submit</button>
+        </div>
+      </div>
+      <div class="card mt">
+        <table>
+          <thead><tr><th>Time</th><th>Target</th><th>Action</th><th>Reason</th><th>Approved</th><th>Outcome</th><th>Expires</th><th></th></tr></thead>
+          <tbody id="rc-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== HONEYPOT ===================== -->
+    <section id="view-honeypot" class="view">
+      <div class="section-title">Honeypot Monitoring<div class="view-actions"><button class="btn small" id="hp-refresh">Refresh</button></div></div>
+      <div class="grid grid-3">
+        <div class="card"><div class="card-title">Status</div><div class="card-value" id="hp-status">—</div></div>
+        <div class="card"><div class="card-title">Interactions (all time)</div><div class="card-value" id="hp-interactions">—</div></div>
+        <div class="card"><div class="card-title">Unique IPs (24h)</div><div class="card-value" id="hp-unique">—</div></div>
+      </div>
+      <div class="card mt">
+        <table>
+          <thead><tr><th>Time</th><th>Source IP:Port</th><th>Method</th><th>Path</th><th>Label</th></tr></thead>
+          <tbody id="hp-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== AUDIT LOGS ===================== -->
+    <section id="view-audit-logs" class="view">
+      <div class="section-title">Audit Logs<div class="view-actions">
+        <button class="btn small" id="al-verify">Verify integrity</button>
+        <button class="btn small" id="al-refresh">Refresh</button>
+      </div></div>
+      <div class="card faint" id="al-verify-result" style="display:none; margin-bottom:10px;"></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Details</th><th>Outcome</th></tr></thead>
+          <tbody id="al-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== CONFIGURATION ===================== -->
+    <section id="view-configuration" class="view">
+      <div class="section-title">Configuration</div>
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="panel-header"><h3>Mode</h3></div>
+          <div class="faint">Monitor mode makes zero system changes. Enforcement mode allows explicitly-approved, reversible actions.</div>
+          <div class="flex mt">
+            <button class="btn small" id="cfg-mode-monitor">Monitor</button>
+            <button class="btn small" id="cfg-mode-enforcement">Enforcement</button>
+          </div>
+          <div class="faint mt">Current: <span id="cfg-current-mode">—</span></div>
+        </div>
+        <div class="card">
+          <div class="panel-header"><h3>AI (OpenRouter)</h3></div>
+          <div class="stat-row"><span class="muted">Model</span><span id="cfg-ai-model">—</span></div>
+          <div class="stat-row"><span class="muted">Status</span><span id="cfg-ai-status">—</span></div>
+          <button class="btn small mt" id="cfg-ai-check">Run health check</button>
+        </div>
+        <div class="card">
+          <div class="panel-header"><h3>Target</h3></div>
+          <div class="stat-row"><span class="muted">Bind scope</span><span id="cfg-bind-scope">—</span></div>
+          <div class="stat-row"><span class="muted">Access log</span><span id="cfg-access-log" class="mono" style="font-size:11px;">—</span></div>
+          <div class="faint mt">Run <code class="inline">python3 -m app.collectors.log_discovery</code> on the server, then set TARGET_* in .env.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="toast" class="toast" style="display:none;"></div>
+<script src="/static/dashboard.js"></script>
+</body>
+</html>

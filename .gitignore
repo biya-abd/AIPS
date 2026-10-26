@@ -1,0 +1,19 @@
+# secrets
+.env
+
+# local data
+data/
+*.db
+*.db-journal
+*.log
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# os
+.DS_Store
