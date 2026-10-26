@@ -23,6 +23,16 @@ and requires explicit human approval before anything is applied.
 ## Team Information
 - [FULL NAME] — [CTC ID]
 
+## Installation
+
+```bash
+git clone https://github.com/biya-abd/AIPS.git
+cd AIPS
+chmod +x setup.sh start.sh stop.sh
+./setup.sh
+```
+
+This clones the repository, makes the helper scripts executable, and runs the setup script which creates a Python virtual environment, installs dependencies from `requirements.txt`, creates the `./data/` directory for the database and audit log, and copies `.env.example` to `.env` (with restrictive permissions).
 
 ## What this actually does
 
